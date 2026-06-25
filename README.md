@@ -82,7 +82,58 @@ Deployable to Vercel as-is.
 src/data/dataset.json     ERP workbook → JSON (25 rooms, 40 agreements, 10 clients)
 src/lib/engine.ts         Risk scoring + revenue + action grouping
 src/lib/actions.ts        Simulated email / webhook / listing generators
+src/lib/service.ts        Service facade shared by REST + MCP (single source of truth)
+src/lib/validate.ts       Dataset gatekeeping (zod) for POST / MCP input
+src/lib/http.ts           CORS + JSON response helpers
 src/lib/format.ts         PHP currency + date helpers
 src/components/*           Dashboard UI
 src/app/page.tsx           Composition (server component runs the engine)
+src/app/api/*              REST endpoints + MCP server
+```
+
+## API & MCP
+
+The engine is exposed two ways — both wrap the same pure `analyse()`. Open CORS
+(`*`), no auth (demo). `GET` runs the bundled dataset; `POST` runs a supplied one.
+
+### REST
+
+| Method | Path | Notes |
+|--------|------|-------|
+| `GET` | `/api` | Service discovery — lists endpoints + MCP info |
+| `GET` | `/api/analysis` | Full analysis over demo data |
+| `POST` | `/api/analysis` | Analyse a supplied `Dataset` (JSON body) |
+| `GET` | `/api/risk` | Risk items. Filters: `?band=High&client=<id\|name>&limit=N` |
+| `POST` | `/api/risk` | Same filters, scored over a posted `Dataset` |
+| `GET` | `/api/vacancies` | Cold vacant rooms + 7-day resale yield |
+| `GET` | `/api/actions` | Top 3 ranked recovery actions |
+
+`POST` body is a bare `Dataset` — `{ rooms, occupancy, clients, today }`. Invalid
+input returns `400` with a list of issues. Risk bands: `Critical \| High \| Medium \| Low`.
+
+```bash
+curl http://localhost:3000/api/actions
+curl "http://localhost:3000/api/risk?band=High&limit=5"
+curl -X POST http://localhost:3000/api/analysis \
+  -H 'content-type: application/json' --data @dataset.json
+```
+
+### MCP (Model Context Protocol)
+
+Streamable-HTTP endpoint at **`/api/mcp`** (`mcp-handler`, stateless / no Redis).
+Add as a remote MCP server in any MCP client.
+
+| Tool | Args | Returns |
+|------|------|---------|
+| `analyse_dataset` | `dataset?` | Full analysis (demo data if omitted) |
+| `get_risk_items` | `band? client? limit?` | Risk-scored agreements |
+| `get_recovery_actions` | — | Top 3 ranked actions |
+| `build_email_draft` | `id` (occId/roomId/clientId) | Re-engagement email draft |
+| `build_resale_listing` | `roomId` | Marketplace resale listing |
+
+```bash
+curl -X POST http://localhost:3000/api/mcp \
+  -H 'content-type: application/json' \
+  -H 'accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
 ```
