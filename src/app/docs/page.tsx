@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 
 /* ------------------------------------------------------------------ *
  * DeskYield API — Reference & Live Console
- * A drafting-console aesthetic: editorial serif over technical mono,
- * blueprint grid, instrument-panel readouts. Every "Run" fires against
- * the live endpoints on this same origin.
+ * Themed to the KMC ERP Core App: light canvas, pumpkin brand accent,
+ * informative/positive/warning/danger semantics, Karla + Barlow.
  * ------------------------------------------------------------------ */
 
 const SAMPLE_DATASET = `{
@@ -155,23 +154,6 @@ const REST: Endpoint[] = [
     body: null,
     returns: "ActionItem[]",
   },
-  {
-    id: "actions-execute",
-    method: "POST",
-    path: "/api/actions/execute",
-    title: "Execute an Action (simulated)",
-    desc: "Fire a recovery play. Returns realistic per-target results — sent / listed / dispatched — tagged simulated:true. No real emails or webhooks are sent, so it is safe to run live.",
-    query: [
-      {
-        name: "key",
-        type: "select",
-        options: ["reengagement", "resale", "broker"],
-        note: "Which play to run.",
-      },
-    ],
-    body: null,
-    returns: "ExecutionResult { summary, count, results[], simulated }",
-  },
 ];
 
 type McpArg = {
@@ -285,14 +267,14 @@ const mono = "[font-family:var(--font-ibm-plex-mono)]";
 function methodTone(method: "GET" | "POST") {
   return method === "GET"
     ? {
-        chip: "bg-emerald-400/10 text-emerald-300 ring-emerald-400/25",
-        btn: "bg-emerald-400 text-emerald-950 hover:bg-emerald-300 shadow-emerald-400/20",
-        dot: "bg-emerald-400",
+        chip: "bg-positive-subtle text-positive ring-positive/25",
+        btn: "bg-positive text-white hover:bg-positive/90 shadow-positive/20",
+        dot: "bg-positive",
       }
     : {
-        chip: "bg-amber-400/10 text-amber-300 ring-amber-400/25",
-        btn: "bg-amber-300 text-amber-950 hover:bg-amber-200 shadow-amber-300/20",
-        dot: "bg-amber-300",
+        chip: "bg-warning-subtle text-warning ring-warning/25",
+        btn: "bg-warning text-white hover:bg-warning/90 shadow-warning/20",
+        dot: "bg-warning",
       };
 }
 
@@ -315,8 +297,8 @@ function ResponseReadout({
 }) {
   if (!loading && !result && !error) {
     return (
-      <div className="flex h-full min-h-[8rem] items-center justify-center rounded-lg border border-dashed border-white/10 px-4 py-6 text-center">
-        <span className={`${mono} text-[11px] tracking-wide text-slate-600`}>
+      <div className="flex h-full min-h-[8rem] items-center justify-center rounded-lg border border-dashed border-line px-4 py-6 text-center">
+        <span className={`${mono} text-[11px] tracking-wide text-ink-tertiary`}>
           awaiting request …
         </span>
       </div>
@@ -324,39 +306,39 @@ function ResponseReadout({
   }
 
   return (
-    <div className="relative overflow-hidden rounded-lg border border-white/10 bg-slate-950/80">
+    <div className="relative overflow-hidden rounded-lg border border-line bg-canvas">
       {/* viewfinder corner brackets */}
-      <span className="pointer-events-none absolute left-1.5 top-1.5 h-3 w-3 border-l border-t border-white/20" />
-      <span className="pointer-events-none absolute right-1.5 top-1.5 h-3 w-3 border-r border-t border-white/20" />
-      <span className="pointer-events-none absolute bottom-1.5 left-1.5 h-3 w-3 border-b border-l border-white/20" />
-      <span className="pointer-events-none absolute bottom-1.5 right-1.5 h-3 w-3 border-b border-r border-white/20" />
+      <span className="pointer-events-none absolute left-1.5 top-1.5 h-3 w-3 border-l border-t border-ink-tertiary/30" />
+      <span className="pointer-events-none absolute right-1.5 top-1.5 h-3 w-3 border-r border-t border-ink-tertiary/30" />
+      <span className="pointer-events-none absolute bottom-1.5 left-1.5 h-3 w-3 border-b border-l border-ink-tertiary/30" />
+      <span className="pointer-events-none absolute bottom-1.5 right-1.5 h-3 w-3 border-b border-r border-ink-tertiary/30" />
 
-      <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2">
+      <div className="flex items-center gap-2 border-b border-line bg-surface px-3 py-2">
         {loading ? (
-          <span className={`${mono} text-[11px] text-slate-400`}>
-            <span className="mr-2 inline-block h-2 w-2 animate-ping rounded-full bg-sky-400 align-middle" />
+          <span className={`${mono} text-[11px] text-ink-tertiary`}>
+            <span className="mr-2 inline-block h-2 w-2 animate-ping rounded-full bg-informative align-middle" />
             running…
           </span>
         ) : error ? (
-          <span className={`${mono} text-[11px] text-rose-300`}>
-            <span className="mr-2 inline-block h-2 w-2 rounded-full bg-rose-400 align-middle" />
+          <span className={`${mono} text-[11px] text-danger`}>
+            <span className="mr-2 inline-block h-2 w-2 rounded-full bg-danger align-middle" />
             network error
           </span>
         ) : result ? (
           <>
             <span
               className={`inline-block h-2 w-2 rounded-full ${
-                result.ok ? "bg-emerald-400" : "bg-rose-400"
+                result.ok ? "bg-positive" : "bg-danger"
               }`}
             />
             <span
               className={`${mono} text-[11px] font-medium ${
-                result.ok ? "text-emerald-300" : "text-rose-300"
+                result.ok ? "text-positive" : "text-danger"
               }`}
             >
               {result.status} {result.ok ? "OK" : "ERR"}
             </span>
-            <span className={`${mono} ml-auto text-[11px] text-slate-500`}>
+            <span className={`${mono} ml-auto text-[11px] text-ink-tertiary`}>
               {result.ms} ms · {new Blob([result.text]).size} B
             </span>
           </>
@@ -367,13 +349,13 @@ function ResponseReadout({
         className={`${mono} max-h-[26rem] overflow-auto px-4 py-3 text-[12px] leading-relaxed`}
       >
         {error ? (
-          <span className="text-rose-300">{error}</span>
+          <span className="text-danger">{error}</span>
         ) : result ? (
           <code
             dangerouslySetInnerHTML={{ __html: highlightJson(result.text) }}
           />
         ) : (
-          <span className="text-slate-600">…</span>
+          <span className="text-ink-tertiary">…</span>
         )}
       </pre>
     </div>
@@ -392,7 +374,7 @@ function Copy({ text }: { text: string }) {
           setTimeout(() => setDone(false), 1200);
         });
       }}
-      className={`${mono} shrink-0 rounded-md border border-white/10 px-2 py-1 text-[10px] uppercase tracking-widest text-slate-400 transition hover:border-white/25 hover:text-slate-200`}
+      className={`${mono} shrink-0 rounded-md border border-line px-2 py-1 text-[10px] uppercase tracking-widest text-ink-tertiary transition hover:border-line-strong hover:text-ink`}
     >
       {done ? "copied" : "copy"}
     </button>
@@ -400,17 +382,8 @@ function Copy({ text }: { text: string }) {
 }
 
 /* --- REST try panel ------------------------------------------------- */
-function TryPanel({ ep, base, origin: parentOrigin }: { ep: Endpoint; base: string; origin: string }) {
-  const [q, setQ] = useState<Record<string, string>>(() => {
-    const init: Record<string, string> = {};
-    for (const p of ep.query) {
-      // Pre-select the first concrete option so a required select isn't empty.
-      if (p.type === "select" && p.options && p.options[0] !== "") {
-        init[p.name] = p.options[0];
-      }
-    }
-    return init;
-  });
+function TryPanel({ ep, base }: { ep: Endpoint; base: string }) {
+  const [q, setQ] = useState<Record<string, string>>({});
   const [bodyText, setBodyText] = useState(ep.body ?? "");
   const [result, setResult] = useState<Result>(null);
   const [error, setError] = useState<string | null>(null);
@@ -427,14 +400,13 @@ function TryPanel({ ep, base, origin: parentOrigin }: { ep: Endpoint; base: stri
   }, [q, ep.query]);
 
   const fullPath = `${ep.path}${queryString}`;
-  const origin = base || parentOrigin;
+  const origin = base || (typeof window !== "undefined" ? window.location.origin : "");
 
   const curl = useMemo(() => {
     const u = `${origin}${fullPath}`;
     if (ep.method === "GET") return `curl ${u}`;
-    if (ep.body === null) return `curl -X POST ${u}`;
     return `curl -X POST ${u} \\\n  -H 'content-type: application/json' \\\n  -d '<dataset json>'`;
-  }, [origin, fullPath, ep.method, ep.body]);
+  }, [origin, fullPath, ep.method]);
 
   async function run() {
     setLoading(true);
@@ -444,7 +416,7 @@ function TryPanel({ ep, base, origin: parentOrigin }: { ep: Endpoint; base: stri
       const init: RequestInit = { method: ep.method };
       if (ep.method === "POST") {
         init.headers = { "content-type": "application/json" };
-        if (ep.body !== null) init.body = bodyText;
+        init.body = bodyText;
       }
       const res = await fetch(`${base}${fullPath}`, init);
       const text = await res.text();
@@ -474,20 +446,20 @@ function TryPanel({ ep, base, origin: parentOrigin }: { ep: Endpoint; base: stri
     <div className="grid gap-4 lg:grid-cols-2">
       <div className="flex flex-col gap-3">
         {/* request line */}
-        <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-2">
+        <div className="flex items-center gap-2 rounded-lg border border-line bg-surface px-2.5 py-2">
           <span
             className={`${mono} rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ring-1 ${tone.chip}`}
           >
             {ep.method}
           </span>
-          <span className={`${mono} truncate text-[12px] text-slate-300`}>
+          <span className={`${mono} truncate text-[12px] text-ink-secondary`}>
             {fullPath}
           </span>
           <button
             type="button"
             onClick={run}
             disabled={loading}
-            className={`${mono} ml-auto shrink-0 rounded-md px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider shadow-lg transition disabled:opacity-50 ${tone.btn}`}
+            className={`${mono} ml-auto shrink-0 rounded-md px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider shadow-md transition disabled:opacity-50 ${tone.btn}`}
           >
             {loading ? "···" : "Run ▸"}
           </button>
@@ -499,7 +471,7 @@ function TryPanel({ ep, base, origin: parentOrigin }: { ep: Endpoint; base: stri
             {ep.query.map((p) => (
               <label key={p.name} className="flex flex-col gap-1">
                 <span
-                  className={`${mono} text-[10px] uppercase tracking-widest text-slate-500`}
+                  className={`${mono} text-[10px] uppercase tracking-widest text-ink-tertiary`}
                 >
                   {p.name}
                 </span>
@@ -509,7 +481,7 @@ function TryPanel({ ep, base, origin: parentOrigin }: { ep: Endpoint; base: stri
                     onChange={(e) =>
                       setQ((s) => ({ ...s, [p.name]: e.target.value }))
                     }
-                    className={`${mono} rounded-md border border-white/10 bg-slate-900/60 px-2 py-1.5 text-[12px] text-slate-200 outline-none focus:border-emerald-400/40`}
+                    className={`${mono} rounded-md border border-line bg-surface px-2 py-1.5 text-[12px] text-ink outline-none focus:border-pumpkin/50`}
                   >
                     {p.options!.map((o) => (
                       <option key={o} value={o}>
@@ -525,7 +497,7 @@ function TryPanel({ ep, base, origin: parentOrigin }: { ep: Endpoint; base: stri
                     onChange={(e) =>
                       setQ((s) => ({ ...s, [p.name]: e.target.value }))
                     }
-                    className={`${mono} rounded-md border border-white/10 bg-slate-900/60 px-2 py-1.5 text-[12px] text-slate-200 placeholder:text-slate-600 outline-none focus:border-emerald-400/40`}
+                    className={`${mono} rounded-md border border-line bg-surface px-2 py-1.5 text-[12px] text-ink placeholder:text-ink-tertiary outline-none focus:border-pumpkin/50`}
                   />
                 )}
               </label>
@@ -534,18 +506,18 @@ function TryPanel({ ep, base, origin: parentOrigin }: { ep: Endpoint; base: stri
         )}
 
         {/* body editor */}
-        {ep.method === "POST" && ep.body !== null && (
+        {ep.method === "POST" && (
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
               <span
-                className={`${mono} text-[10px] uppercase tracking-widest text-slate-500`}
+                className={`${mono} text-[10px] uppercase tracking-widest text-ink-tertiary`}
               >
                 request body · Dataset
               </span>
               <button
                 type="button"
                 onClick={() => setBodyText(ep.body ?? "")}
-                className={`${mono} text-[10px] uppercase tracking-widest text-slate-500 transition hover:text-amber-300`}
+                className={`${mono} text-[10px] uppercase tracking-widest text-ink-tertiary transition hover:text-warning`}
               >
                 ↺ reset sample
               </button>
@@ -555,14 +527,14 @@ function TryPanel({ ep, base, origin: parentOrigin }: { ep: Endpoint; base: stri
               onChange={(e) => setBodyText(e.target.value)}
               spellCheck={false}
               rows={10}
-              className={`${mono} resize-y rounded-lg border border-white/10 bg-slate-950/70 px-3 py-2.5 text-[11.5px] leading-relaxed text-slate-300 outline-none focus:border-amber-300/40`}
+              className={`${mono} resize-y rounded-lg border border-line bg-canvas px-3 py-2.5 text-[11.5px] leading-relaxed text-ink-secondary outline-none focus:border-pumpkin/50`}
             />
           </div>
         )}
 
         {/* curl */}
-        <div className="flex items-center gap-2 rounded-lg border border-white/[0.06] bg-black/30 px-3 py-2">
-          <span className={`${mono} truncate text-[11px] text-slate-500`}>
+        <div className="flex items-center gap-2 rounded-lg border border-line bg-canvas px-3 py-2">
+          <span className={`${mono} truncate text-[11px] text-ink-tertiary`}>
             {curl.split("\n")[0]}
             {ep.method === "POST" ? " …" : ""}
           </span>
@@ -656,9 +628,9 @@ function McpRunner({ base }: { base: string }) {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-2">
+        <div className="flex items-center gap-2 rounded-lg border border-line bg-surface px-2.5 py-2">
           <span
-            className={`${mono} rounded bg-indigo-400/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-indigo-300 ring-1 ring-indigo-400/25`}
+            className={`${mono} rounded bg-pumpkin-subtle px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-pumpkin ring-1 ring-pumpkin/25`}
           >
             tool
           </span>
@@ -669,7 +641,7 @@ function McpRunner({ base }: { base: string }) {
               setResult(null);
               setError(null);
             }}
-            className={`${mono} min-w-0 flex-1 truncate rounded-md border border-white/10 bg-slate-900/60 px-2 py-1 text-[12px] text-slate-200 outline-none focus:border-indigo-400/40`}
+            className={`${mono} min-w-0 flex-1 truncate rounded-md border border-line bg-surface px-2 py-1 text-[12px] text-ink outline-none focus:border-pumpkin/50`}
           >
             {MCP_TOOLS.map((t) => (
               <option key={t.name} value={t.name}>
@@ -681,24 +653,24 @@ function McpRunner({ base }: { base: string }) {
             type="button"
             onClick={run}
             disabled={loading}
-            className={`${mono} ml-auto shrink-0 rounded-md bg-indigo-400 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-indigo-950 shadow-lg shadow-indigo-400/20 transition hover:bg-indigo-300 disabled:opacity-50`}
+            className={`${mono} ml-auto shrink-0 rounded-md bg-pumpkin px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-white shadow-md shadow-pumpkin/20 transition hover:bg-pumpkin-hover disabled:opacity-50`}
           >
             {loading ? "···" : "Call ▸"}
           </button>
         </div>
 
-        <p className="text-[13px] leading-relaxed text-slate-400">{tool.desc}</p>
+        <p className="text-[13px] leading-relaxed text-ink-secondary">{tool.desc}</p>
 
         {tool.args.length > 0 ? (
           <div className="flex flex-col gap-2.5">
             {tool.args.map((a) => (
               <label key={a.name} className="flex flex-col gap-1">
                 <span
-                  className={`${mono} flex items-center gap-2 text-[10px] uppercase tracking-widest text-slate-500`}
+                  className={`${mono} flex items-center gap-2 text-[10px] uppercase tracking-widest text-ink-tertiary`}
                 >
                   {a.name}
                   {a.optional && (
-                    <span className="rounded bg-white/5 px-1 text-[9px] normal-case tracking-normal text-slate-500">
+                    <span className="rounded bg-canvas px-1 text-[9px] normal-case tracking-normal text-ink-tertiary">
                       optional
                     </span>
                   )}
@@ -707,7 +679,7 @@ function McpRunner({ base }: { base: string }) {
                   <select
                     value={args[`${tool.name}.${a.name}`] ?? ""}
                     onChange={(e) => setArg(`${tool.name}.${a.name}`, e.target.value)}
-                    className={`${mono} rounded-md border border-white/10 bg-slate-900/60 px-2 py-1.5 text-[12px] text-slate-200 outline-none focus:border-indigo-400/40`}
+                    className={`${mono} rounded-md border border-line bg-surface px-2 py-1.5 text-[12px] text-ink outline-none focus:border-pumpkin/50`}
                   >
                     {a.options!.map((o) => (
                       <option key={o} value={o}>
@@ -722,7 +694,7 @@ function McpRunner({ base }: { base: string }) {
                     placeholder="{ }  — leave blank for demo data"
                     spellCheck={false}
                     rows={6}
-                    className={`${mono} resize-y rounded-lg border border-white/10 bg-slate-950/70 px-3 py-2 text-[11.5px] leading-relaxed text-slate-300 placeholder:text-slate-600 outline-none focus:border-indigo-400/40`}
+                    className={`${mono} resize-y rounded-lg border border-line bg-canvas px-3 py-2 text-[11.5px] leading-relaxed text-ink-secondary placeholder:text-ink-tertiary outline-none focus:border-pumpkin/50`}
                   />
                 ) : (
                   <input
@@ -730,15 +702,15 @@ function McpRunner({ base }: { base: string }) {
                     defaultValue={a.default}
                     placeholder={a.placeholder}
                     onChange={(e) => setArg(`${tool.name}.${a.name}`, e.target.value)}
-                    className={`${mono} rounded-md border border-white/10 bg-slate-900/60 px-2 py-1.5 text-[12px] text-slate-200 placeholder:text-slate-600 outline-none focus:border-indigo-400/40`}
+                    className={`${mono} rounded-md border border-line bg-surface px-2 py-1.5 text-[12px] text-ink placeholder:text-ink-tertiary outline-none focus:border-pumpkin/50`}
                   />
                 )}
-                <span className="text-[11px] text-slate-600">{a.note}</span>
+                <span className="text-[11px] text-ink-tertiary">{a.note}</span>
               </label>
             ))}
           </div>
         ) : (
-          <p className={`${mono} text-[11px] text-slate-600`}>
+          <p className={`${mono} text-[11px] text-ink-tertiary`}>
             no arguments — just call it
           </p>
         )}
@@ -764,18 +736,18 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section id={id} className="scroll-mt-24 border-t border-white/[0.07] pt-12">
+    <section id={id} className="scroll-mt-24 border-t border-line pt-12">
       <div className="mb-6 flex items-baseline gap-4">
-        <span className={`${mono} text-[11px] tracking-widest text-slate-600`}>
+        <span className={`${mono} text-[11px] tracking-widest text-ink-tertiary`}>
           {index}
         </span>
         <div>
           <div
-            className={`${mono} mb-1 text-[10px] uppercase tracking-[0.25em] text-emerald-400/70`}
+            className={`${mono} mb-1 text-[10px] uppercase tracking-[0.25em] text-pumpkin`}
           >
             {kicker}
           </div>
-          <h2 className={`${display} text-2xl text-slate-100`}>{title}</h2>
+          <h2 className={`${display} text-2xl text-ink`}>{title}</h2>
         </div>
       </div>
       {children}
@@ -791,244 +763,19 @@ const NAV = [
     kind: "rest" as const,
     method: e.method,
   })),
-  { id: "chat", label: "Chat Agent", kind: "chat" as const },
-  { id: "widget", label: "Widget Embed", kind: "widget" as const },
   { id: "mcp", label: "MCP Console", kind: "mcp" as const },
 ];
 
-/* --- Widget embed guide -------------------------------------------- */
-function WidgetCode({ children }: { children: string }) {
-  return (
-    <pre
-      className={`${mono} overflow-x-auto rounded-lg border border-white/10 bg-slate-950/70 p-3.5 text-[11.5px] leading-relaxed text-slate-300`}
-    >
-      {children}
-    </pre>
-  );
-}
-
-function WidgetPanel({
-  tag,
-  title,
-  children,
-}: {
-  tag: string;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
-      <div className="mb-3 flex items-center gap-2">
-        <span className={`${mono} rounded-md bg-white/[0.06] px-2 py-0.5 text-[10px] uppercase tracking-wider text-slate-300`}>
-          {tag}
-        </span>
-        <h3 className="text-[13px] font-semibold text-slate-100">{title}</h3>
-      </div>
-      {children}
-    </div>
-  );
-}
-
-function WidgetEmbed({ origin }: { origin: string }) {
-  const host = origin || "<origin>";
-  const [live, setLive] = useState(false);
-  const mounted = useRef(false);
-
-  useEffect(() => {
-    if (mounted.current) return;
-    mounted.current = true;
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/widget-token");
-        const data = (await res.json()) as {
-          enabled?: boolean;
-          origin?: string;
-          token?: string;
-        };
-        if (cancelled || !data.enabled || !data.token || !data.origin) return;
-        setLive(true);
-        const s = document.createElement("script");
-        s.async = true;
-        s.src = `${data.origin}/deskyield-chat.js`;
-        s.onload = () => {
-          const w = window as unknown as {
-            DeskYieldChat?: { mount: (o: Record<string, string>) => void };
-          };
-          w.DeskYieldChat?.mount({
-            host: data.origin!,
-            token: data.token!,
-            title: "DeskYield",
-            subtitle: "Empty-desk revenue analyst",
-          });
-        };
-        document.body.appendChild(s);
-      } catch {
-        /* demo not configured — guide stays static */
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  return (
-    <div className="flex flex-col gap-6">
-      {/* live status */}
-      {live ? (
-        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 text-[13px] text-slate-300">
-          <span className="mr-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-300 ring-1 ring-emerald-500/30">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-            Live
-          </span>
-          The widget is live on this page — click the launcher (bottom-right).
-          Ask which seats are at risk this week, or to draft a re-engagement email.
-        </div>
-      ) : (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-[13px] text-slate-300">
-          Live demo off. Set{" "}
-          <code className={`${mono} text-slate-200`}>DESKYIELD_DEMO_API_KEY</code>{" "}
-          (see Service setup below) to mount it here.
-        </div>
-      )}
-
-      {/* embed — integrating apps */}
-      <div>
-        <div className="mb-1 flex flex-wrap items-center gap-2">
-          <h3 className="text-[15px] font-semibold text-slate-100">
-            Embed the widget
-          </h3>
-          <span className={`${mono} rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] uppercase tracking-wider text-emerald-300 ring-1 ring-emerald-500/30`}>
-            integrating apps
-          </span>
-        </div>
-        <p className="mb-4 text-[13px] leading-relaxed text-slate-400">
-          Hand the app an API key (<code className={`${mono} text-slate-300`}>dsky_…</code>)
-          you issued, plus these two steps. No env vars, no OpenAI key on their side.
-        </p>
-        <div className="grid gap-3 md:grid-cols-2">
-          <WidgetPanel tag="1 · backend" title="Get a visitor token">
-            <p className="mb-3 text-[12px] text-slate-500">
-              Call once per session with the API key. Pass the returned token to
-              the frontend.
-            </p>
-            <WidgetCode>{`const res = await fetch("${host}/api/chat/token", {
-  method: "POST",
-  headers: { authorization: "Bearer dsky_…" },
-});
-const { token } = await res.json();
-// token -> "dyv.…"`}</WidgetCode>
-          </WidgetPanel>
-          <WidgetPanel tag="2 · frontend" title="Mount the widget">
-            <p className="mb-3 text-[12px] text-slate-500">
-              Load the script and mount with the token from step 1.
-            </p>
-            <WidgetCode>{`<script src="${host}/deskyield-chat.js"></script>
-<script>
-  DeskYieldChat.mount({
-    host: "${host}",
-    token,            // the dyv.… from step 1
-  });
-</script>`}</WidgetCode>
-          </WidgetPanel>
-        </div>
-        <p className="mt-3 text-[12px] text-slate-500">
-          A launcher button and chat panel appear, style-isolated via Shadow DOM.
-          Optional mount options:{" "}
-          <code className={`${mono} text-slate-400`}>title</code>,{" "}
-          <code className={`${mono} text-slate-400`}>subtitle</code>.
-        </p>
-      </div>
-
-      {/* service setup — operator */}
-      <div>
-        <div className="mb-1 flex flex-wrap items-center gap-2">
-          <h3 className="text-[15px] font-semibold text-slate-100">
-            Service setup
-          </h3>
-          <span className={`${mono} rounded-full bg-indigo-500/15 px-2 py-0.5 text-[10px] uppercase tracking-wider text-indigo-300 ring-1 ring-indigo-500/30`}>
-            operator
-          </span>
-        </div>
-        <p className="mb-4 text-[13px] leading-relaxed text-slate-400">
-          Done on <strong>your</strong> deployment. Integrating apps never see
-          these.
-        </p>
-        <div className="space-y-4">
-          <div>
-            <p className="mb-2 text-[12px] text-slate-500">
-              Generate a token secret and an initial API key:
-            </p>
-            <WidgetCode>{`openssl rand -hex 32                      # -> DESKYIELD_TOKEN_SECRET
-node scripts/issue-key.mjs ${host}   # -> prints key + DESKYIELD_API_KEYS line`}</WidgetCode>
-          </div>
-          <div>
-            <p className="mb-2 text-[12px] text-slate-500">
-              Add to <code className={`${mono} text-slate-300`}>.env.local</code>{" "}
-              (dev) or your host&apos;s env store:
-            </p>
-            <WidgetCode>{`OPENAI_API_KEY=sk-…
-DESKYIELD_TOKEN_SECRET=<from openssl, set once>
-DESKYIELD_API_KEYS=[{"id":"<id>","hash":"<hash>","origins":["${host}"]}]
-DESKYIELD_DEMO_API_KEY=dsky_…   # optional: enables the live demo above`}</WidgetCode>
-          </div>
-          <div>
-            <p className="mb-2 text-[12px] text-slate-500">
-              Issue a key for a new app — bound to <strong>their</strong> origin;
-              visitor tokens from anywhere else are rejected:
-            </p>
-            <WidgetCode>{`node scripts/issue-key.mjs https://their-app.com
-# -> dsky_… (hand THIS to the integrating app, with the embed snippet)
-# -> DESKYIELD_API_KEYS record (add it to YOUR env)`}</WidgetCode>
-          </div>
-        </div>
-      </div>
-
-      {/* reference */}
-      <div>
-        <h3 className="mb-3 text-[15px] font-semibold text-slate-100">Reference</h3>
-        <div className="overflow-x-auto rounded-lg border border-white/[0.07]">
-          <table className="w-full text-left text-[12px]">
-            <thead className={`${mono} bg-white/[0.03] text-slate-500`}>
-              <tr>
-                <th className="px-4 py-2 font-medium">Endpoint</th>
-                <th className="px-4 py-2 font-medium">Credential</th>
-                <th className="px-4 py-2 font-medium">Use</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/[0.06] text-slate-300">
-              <tr>
-                <td className={`${mono} px-4 py-2 text-slate-200`}>POST /api/chat/token</td>
-                <td className={`${mono} px-4 py-2 text-indigo-300`}>dsky_…</td>
-                <td className="px-4 py-2">Mint a visitor token</td>
-              </tr>
-              <tr>
-                <td className={`${mono} px-4 py-2 text-slate-200`}>POST /api/chat</td>
-                <td className={`${mono} px-4 py-2 text-emerald-300`}>dyv.…</td>
-                <td className="px-4 py-2">Stream a chat turn (SSE)</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <ul className="mt-4 space-y-1.5 text-[12px] text-slate-500">
-          <li>• Tokens are origin-bound and expire (default 1h); mint a fresh one when needed.</li>
-          <li>• Visitor tokens can&apos;t mint tokens — only API keys can.</li>
-          <li>• The agent is read-only: it queries the engine and drafts artifacts, never sends.</li>
-        </ul>
-      </div>
-    </div>
-  );
-}
-
 export default function ApiDocs() {
   const [base, setBase] = useState("");
-  const origin = useSyncExternalStore(
-    () => () => {},
-    () => window.location.origin,
-    () => "",
-  );
+  const [origin, setOrigin] = useState("");
   const [active, setActive] = useState("overview");
   const main = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setOrigin(window.location.origin);
+  }, []);
 
   useEffect(() => {
     const ids = NAV.map((n) => n.id);
@@ -1048,17 +795,17 @@ export default function ApiDocs() {
   }, []);
 
   return (
-    <div className="relative min-h-screen text-slate-300">
+    <div className="relative min-h-screen text-ink-secondary">
       {/* injected styles: tokens, grid, motion */}
       <style
         dangerouslySetInnerHTML={{
           __html: `
           html { scroll-behavior: smooth; }
-          .tok-key  { color:#7dd3fc; }
-          .tok-str  { color:#6ee7b7; }
-          .tok-num  { color:#fcd34d; }
-          .tok-bool { color:#c4b5fd; }
-          .tok-null { color:#64748b; }
+          .tok-key  { color:#3062D4; }
+          .tok-str  { color:#1D7C4D; }
+          .tok-num  { color:#FF7200; }
+          .tok-bool { color:#7c3aed; }
+          .tok-null { color:#7e8b99; }
           @keyframes dy-rise { from { opacity:0; transform:translateY(10px);} to {opacity:1; transform:none;} }
           .dy-rise { animation: dy-rise .6s cubic-bezier(.2,.7,.2,1) both; }
           @keyframes dy-blink { 0%,49%{opacity:1;} 50%,100%{opacity:0;} }
@@ -1071,9 +818,9 @@ export default function ApiDocs() {
       <div
         className="pointer-events-none fixed inset-0 -z-10"
         style={{
-          backgroundColor: "#020617",
+          backgroundColor: "#f9fafb",
           backgroundImage:
-            "radial-gradient(60rem 40rem at 12% -8%, rgba(16,185,129,0.10), transparent 60%), radial-gradient(50rem 40rem at 100% 0%, rgba(99,102,241,0.08), transparent 55%), linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)",
+            "radial-gradient(60rem 40rem at 12% -8%, rgba(255,114,0,0.07), transparent 60%), radial-gradient(50rem 40rem at 100% 0%, rgba(48,98,212,0.06), transparent 55%), linear-gradient(rgba(39,46,53,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(39,46,53,0.035) 1px, transparent 1px)",
           backgroundSize: "auto, auto, 44px 44px, 44px 44px",
         }}
       />
@@ -1082,14 +829,14 @@ export default function ApiDocs() {
         {/* sidebar */}
         <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col gap-6 overflow-y-auto py-8 lg:flex">
           <Link href="/" className="group flex items-center gap-2">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/15 text-lg ring-1 ring-emerald-500/30">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-pumpkin-subtle text-lg ring-1 ring-pumpkin/30">
               🪑
             </span>
             <span>
-              <span className={`${display} block text-[15px] leading-none text-slate-100`}>
+              <span className={`${display} block text-[15px] leading-none text-ink`}>
                 DeskYield
               </span>
-              <span className={`${mono} block text-[10px] uppercase tracking-[0.2em] text-slate-500`}>
+              <span className={`${mono} block text-[10px] uppercase tracking-[0.2em] text-ink-tertiary`}>
                 API · v1
               </span>
             </span>
@@ -1104,26 +851,20 @@ export default function ApiDocs() {
                   href={`#${n.id}`}
                   className={`${mono} flex items-center gap-2 rounded-md px-2 py-1.5 text-[12px] transition ${
                     isActive
-                      ? "bg-white/[0.06] text-slate-100"
-                      : "text-slate-500 hover:text-slate-300"
+                      ? "bg-pumpkin-subtle text-pumpkin"
+                      : "text-ink-tertiary hover:text-ink-secondary"
                   }`}
                 >
                   {"method" in n ? (
                     <span
                       className={`inline-block h-1.5 w-1.5 rounded-full ${
-                        n.method === "GET" ? "bg-emerald-400" : "bg-amber-300"
+                        n.method === "GET" ? "bg-positive" : "bg-warning"
                       }`}
                     />
                   ) : (
                     <span
                       className={`inline-block h-1.5 w-1.5 rounded-full ${
-                        n.kind === "mcp"
-                          ? "bg-indigo-400"
-                          : n.kind === "chat"
-                            ? "bg-sky-400"
-                            : n.kind === "widget"
-                              ? "bg-emerald-400"
-                              : "bg-slate-600"
+                        n.kind === "mcp" ? "bg-informative" : "bg-ink-tertiary"
                       }`}
                     />
                   )}
@@ -1133,17 +874,17 @@ export default function ApiDocs() {
             })}
           </nav>
 
-          <div className="mt-auto border-t border-white/[0.07] pt-4">
-            <div className={`${mono} mb-1 text-[10px] uppercase tracking-widest text-slate-600`}>
+          <div className="mt-auto border-t border-line pt-4">
+            <div className={`${mono} mb-1 text-[10px] uppercase tracking-widest text-ink-tertiary`}>
               base url
             </div>
             <input
               value={base}
               onChange={(e) => setBase(e.target.value)}
               placeholder={origin || "same origin"}
-              className={`${mono} w-full rounded-md border border-white/10 bg-slate-900/60 px-2 py-1.5 text-[11px] text-slate-300 placeholder:text-slate-600 outline-none focus:border-emerald-400/40`}
+              className={`${mono} w-full rounded-md border border-line bg-surface px-2 py-1.5 text-[11px] text-ink placeholder:text-ink-tertiary outline-none focus:border-pumpkin/50`}
             />
-            <p className="mt-1.5 text-[10px] leading-snug text-slate-600">
+            <p className="mt-1.5 text-[10px] leading-snug text-ink-tertiary">
               Blank = this origin. Requests fire live from your browser.
             </p>
           </div>
@@ -1154,21 +895,21 @@ export default function ApiDocs() {
           {/* hero */}
           <header className="dy-rise mb-4">
             <div className={`${mono} mb-4 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.2em]`}>
-              <span className="rounded-full bg-emerald-400/10 px-2.5 py-1 text-emerald-300 ring-1 ring-emerald-400/20">
+              <span className="rounded-full bg-pumpkin-subtle px-2.5 py-1 text-pumpkin ring-1 ring-pumpkin/20">
                 REST + MCP
               </span>
-              <span className="rounded-full bg-white/5 px-2.5 py-1 text-slate-400 ring-1 ring-white/10">
+              <span className="rounded-full bg-canvas px-2.5 py-1 text-ink-tertiary ring-1 ring-line">
                 CORS · open
               </span>
-              <span className="rounded-full bg-white/5 px-2.5 py-1 text-slate-400 ring-1 ring-white/10">
+              <span className="rounded-full bg-canvas px-2.5 py-1 text-ink-tertiary ring-1 ring-line">
                 no auth
               </span>
             </div>
-            <h1 className={`${display} text-[2.7rem] leading-[1.05] text-slate-50 sm:text-6xl`}>
+            <h1 className={`${display} text-[2.7rem] leading-[1.05] text-ink sm:text-6xl`}>
               The Empty Desk API
-              <span className="dy-cursor ml-1 text-emerald-400">_</span>
+              <span className="dy-cursor ml-1 text-pumpkin">_</span>
             </h1>
-            <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-slate-400">
+            <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-ink-secondary">
               One deterministic engine, two surfaces. Score reserved seats at risk
               of going unused in the next 7 days, surface ranked recovery actions
               with PHP estimates, and draft the outreach — over plain REST or as an
@@ -1197,13 +938,13 @@ export default function ApiDocs() {
                 ].map(([k, v, note]) => (
                   <div
                     key={k}
-                    className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4"
+                    className="rounded-xl border border-line bg-surface p-4"
                   >
-                    <div className={`${mono} text-[10px] uppercase tracking-widest text-slate-500`}>
+                    <div className={`${mono} text-[10px] uppercase tracking-widest text-ink-tertiary`}>
                       {k}
                     </div>
-                    <div className={`${mono} mt-1 text-[13px] text-slate-200`}>{v}</div>
-                    <div className="mt-1 text-[12px] leading-snug text-slate-500">
+                    <div className={`${mono} mt-1 text-[13px] text-ink`}>{v}</div>
+                    <div className="mt-1 text-[12px] leading-snug text-ink-tertiary">
                       {note}
                     </div>
                   </div>
@@ -1220,111 +961,43 @@ export default function ApiDocs() {
                 kicker={`${ep.method} · ${ep.path}`}
                 title={ep.title}
               >
-                <p className="mb-2 max-w-2xl text-[14px] leading-relaxed text-slate-400">
+                <p className="mb-2 max-w-2xl text-[14px] leading-relaxed text-ink-secondary">
                   {ep.desc}
                 </p>
-                <p className={`${mono} mb-5 text-[11px] text-slate-600`}>
+                <p className={`${mono} mb-5 text-[11px] text-ink-tertiary`}>
                   → returns&nbsp;
-                  <span className="text-slate-400">{ep.returns}</span>
+                  <span className="text-ink-secondary">{ep.returns}</span>
                 </p>
-                <TryPanel ep={ep} base={base} origin={origin} />
+                <TryPanel ep={ep} base={base} />
               </Section>
             ))}
-
-            {/* Chat agent */}
-            <Section
-              id="chat"
-              index={String(REST.length + 1).padStart(2, "0")}
-              kicker="sse · /api/chat · auth required"
-              title="Chat Agent"
-            >
-              <p className="mb-2 max-w-2xl text-[14px] leading-relaxed text-slate-400">
-                A conversational agent that streams answers (SSE) and grounds every
-                PHP figure via read-only tool calls over the same engine. Two-token
-                auth: an API key (<span className={`${mono} text-slate-300`}>dsky_…</span>)
-                for server-to-server, or a short-lived visitor token
-                (<span className={`${mono} text-slate-300`}>dyv.…</span>) for browser
-                widgets — minted via{" "}
-                <span className={`${mono} text-slate-300`}>POST /api/chat/token</span>.
-              </p>
-              <p className={`${mono} mb-5 text-[11px] text-slate-600`}>
-                → event-stream&nbsp;
-                <span className="text-slate-400">
-                  {`{ type: "delta" | "tool_call" | "tool_result" | "done" | "error" }`}
-                </span>
-              </p>
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                {[
-                  ["Auth", "Bearer dsky_… / dyv.…", "API key = server-to-server. Visitor token = browser, origin-checked."],
-                  ["Tools", "6 read-only", "get_recovery_actions · get_risk_items · get_vacancies · get_totals · build_email_draft · build_resale_listing"],
-                  ["Scope", "read-only", "The model can never send email or publish listings — only draft artifacts."],
-                  ["Embed", "#widget", "Drop the chat agent into any app — see Widget Embed below."],
-                ].map(([k, v, note]) => (
-                  <div
-                    key={k}
-                    className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4"
-                  >
-                    <div className={`${mono} text-[10px] uppercase tracking-widest text-slate-500`}>
-                      {k}
-                    </div>
-                    <div className={`${mono} mt-1 text-[13px] text-slate-200`}>{v}</div>
-                    <div className="mt-1 text-[12px] leading-snug text-slate-500">{note}</div>
-                  </div>
-                ))}
-              </div>
-
-              <p className="mt-5 max-w-2xl text-[13px] leading-relaxed text-slate-400">
-                Want it in your own app? The{" "}
-                <a href="#widget" className="text-sky-300 underline decoration-sky-500/40 underline-offset-2 hover:text-sky-200">
-                  Widget Embed
-                </a>{" "}
-                section below has the live demo and the 2-step embed.
-              </p>
-            </Section>
-
-            {/* Widget embed */}
-            <Section
-              id="widget"
-              index={String(REST.length + 2).padStart(2, "0")}
-              kicker="embed · /deskyield-chat.js"
-              title="Widget Embed"
-            >
-              <p className="mb-6 max-w-2xl text-[14px] leading-relaxed text-slate-400">
-                Drop the chat agent into any app. Two roles: <strong>you</strong>{" "}
-                (operator) configure the service and issue API keys;{" "}
-                <strong>integrating apps</strong> embed the widget with a key you
-                give them. The launcher is style-isolated via Shadow DOM.
-              </p>
-              <WidgetEmbed origin={origin} />
-            </Section>
 
             {/* MCP */}
             <Section
               id="mcp"
-              index={String(REST.length + 3).padStart(2, "0")}
+              index={String(REST.length + 1).padStart(2, "0")}
               kicker="streamable-http · /api/mcp"
               title="MCP Console"
             >
-              <p className="mb-2 max-w-2xl text-[14px] leading-relaxed text-slate-400">
+              <p className="mb-2 max-w-2xl text-[14px] leading-relaxed text-ink-secondary">
                 The same engine as a Model Context Protocol server over streamable
                 HTTP — stateless, no Redis. Add{" "}
-                <span className={`${mono} text-slate-300`}>
+                <span className={`${mono} text-ink`}>
                   {(origin || "<origin>") + "/api/mcp"}
                 </span>{" "}
                 as a remote MCP server in any client, or call a tool below. Responses
                 arrive as SSE; the console unwraps the tool result for you.
               </p>
-              <p className={`${mono} mb-5 text-[11px] text-slate-600`}>
+              <p className={`${mono} mb-5 text-[11px] text-ink-tertiary`}>
                 → JSON-RPC&nbsp;
-                <span className="text-slate-400">tools/call</span>
+                <span className="text-ink-secondary">tools/call</span>
               </p>
               <McpRunner base={base} />
             </Section>
           </div>
 
-          <footer className="mt-16 border-t border-white/[0.07] pt-6">
-            <p className={`${mono} text-[11px] text-slate-600`}>
+          <footer className="mt-16 border-t border-line pt-6">
+            <p className={`${mono} text-[11px] text-ink-tertiary`}>
               DeskYield · deterministic multi-signal model — Days to Expiry 40% ·
               Seat Gap 30% · Lease Term 20% · Account Status 10%.
             </p>
