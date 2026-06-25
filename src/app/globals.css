@@ -5,10 +5,43 @@
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-display);
   --font-serif: var(--font-serif);
+
+  /* KMC palette — Brand (Pumpkin) */
+  --color-pumpkin: #ff7200;
+  --color-pumpkin-hover: #f2730d;
+  --color-pumpkin-active: #ff6a00;
+  --color-pumpkin-subtle: #fff1e6;
+  --color-pumpkin-subtle-hover: #ffe9d6;
+
+  /* Content / ink text */
+  --color-ink: #272e35;
+  --color-ink-secondary: #555f6d;
+  --color-ink-tertiary: #7e8b99;
+  --color-ink-disabled: #9ea8b3;
+  --color-ink-navy: #001738;
+
+  /* Semantic */
+  --color-informative: #3062d4;
+  --color-informative-subtle: #edf2ff;
+  --color-positive: #1d7c4d;
+  --color-positive-subtle: #e6f9ef;
+  --color-warning: #f59638;
+  --color-warning-subtle: #fff5eb;
+  --color-danger: #c53434;
+  --color-danger-subtle: #ffebeb;
+
+  /* Surfaces */
+  --color-surface: #ffffff;
+  --color-canvas: #f9fafb;
+  --color-surface-neutral: #f9fafb;
+
+  /* Lines / borders */
+  --color-line: #e9ecef;
+  --color-line-strong: #cfd6dd;
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
   scroll-behavior: smooth;
 }
 
@@ -96,8 +129,8 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-.text-gradient-emerald {
-  background: linear-gradient(120deg, #6ee7b7 0%, #34d399 40%, #a3e635 100%);
+.text-gradient-pumpkin {
+  background: linear-gradient(120deg, #ff7200 0%, #f59638 50%, #ff6a00 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
