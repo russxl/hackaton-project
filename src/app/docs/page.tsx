@@ -154,6 +154,23 @@ const REST: Endpoint[] = [
     body: null,
     returns: "ActionItem[]",
   },
+  {
+    id: "actions-execute",
+    method: "POST",
+    path: "/api/actions/execute",
+    title: "Execute an Action (simulated)",
+    desc: "Fire a recovery play. Returns realistic per-target results — sent / listed / dispatched — tagged simulated:true. No real emails or webhooks are sent, so it is safe to run live.",
+    query: [
+      {
+        name: "key",
+        type: "select",
+        options: ["reengagement", "resale", "broker"],
+        note: "Which play to run.",
+      },
+    ],
+    body: null,
+    returns: "ExecutionResult { summary, count, results[], simulated }",
+  },
 ];
 
 type McpArg = {
@@ -383,7 +400,16 @@ function Copy({ text }: { text: string }) {
 
 /* --- REST try panel ------------------------------------------------- */
 function TryPanel({ ep, base }: { ep: Endpoint; base: string }) {
-  const [q, setQ] = useState<Record<string, string>>({});
+  const [q, setQ] = useState<Record<string, string>>(() => {
+    const init: Record<string, string> = {};
+    for (const p of ep.query) {
+      // Pre-select the first concrete option so a required select isn't empty.
+      if (p.type === "select" && p.options && p.options[0] !== "") {
+        init[p.name] = p.options[0];
+      }
+    }
+    return init;
+  });
   const [bodyText, setBodyText] = useState(ep.body ?? "");
   const [result, setResult] = useState<Result>(null);
   const [error, setError] = useState<string | null>(null);
@@ -405,8 +431,9 @@ function TryPanel({ ep, base }: { ep: Endpoint; base: string }) {
   const curl = useMemo(() => {
     const u = `${origin}${fullPath}`;
     if (ep.method === "GET") return `curl ${u}`;
+    if (ep.body === null) return `curl -X POST ${u}`;
     return `curl -X POST ${u} \\\n  -H 'content-type: application/json' \\\n  -d '<dataset json>'`;
-  }, [origin, fullPath, ep.method]);
+  }, [origin, fullPath, ep.method, ep.body]);
 
   async function run() {
     setLoading(true);
@@ -416,7 +443,7 @@ function TryPanel({ ep, base }: { ep: Endpoint; base: string }) {
       const init: RequestInit = { method: ep.method };
       if (ep.method === "POST") {
         init.headers = { "content-type": "application/json" };
-        init.body = bodyText;
+        if (ep.body !== null) init.body = bodyText;
       }
       const res = await fetch(`${base}${fullPath}`, init);
       const text = await res.text();
@@ -506,7 +533,7 @@ function TryPanel({ ep, base }: { ep: Endpoint; base: string }) {
         )}
 
         {/* body editor */}
-        {ep.method === "POST" && (
+        {ep.method === "POST" && ep.body !== null && (
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
               <span
