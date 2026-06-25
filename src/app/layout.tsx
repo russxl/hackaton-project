@@ -1,15 +1,21 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Karla, Barlow_Condensed } from "next/font/google";
 import "./globals.css";
+import AppShell from "@/components/AppShell";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const karla = Karla({
   subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  variable: "--font-karla",
+  display: "swap",
+  fallback: ["system-ui", "arial", "sans-serif"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const barlowCondensed = Barlow_Condensed({
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-barlow-condensed",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -26,10 +32,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${karla.variable} ${barlowCondensed.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-slate-950 text-slate-100">
-        {children}
+      <body className="min-h-full bg-canvas font-sans text-ink">
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

@@ -12,9 +12,9 @@ import {
 type ActionKey = "reengagement" | "resale" | "broker";
 
 const RANK_CHIP: Record<number, string> = {
-  1: "bg-rose-500/15 text-rose-300 border-rose-500/30",
-  2: "bg-amber-500/15 text-amber-300 border-amber-500/30",
-  3: "bg-indigo-500/15 text-indigo-300 border-indigo-500/30",
+  1: "bg-danger-subtle text-danger border-danger/20",
+  2: "bg-pumpkin-subtle text-pumpkin border-pumpkin/20",
+  3: "bg-informative-subtle text-informative border-informative/20",
 };
 
 const BUTTON_LABEL: Record<ActionKey, string> = {
@@ -25,7 +25,7 @@ const BUTTON_LABEL: Record<ActionKey, string> = {
 
 function CodeBlock({ children }: { children: React.ReactNode }) {
   return (
-    <pre className="bg-slate-950 border border-slate-800 rounded-lg p-4 text-xs overflow-x-auto text-slate-300 whitespace-pre-wrap">
+    <pre className="whitespace-pre-wrap overflow-x-auto rounded-lg border border-line bg-canvas p-4 font-mono text-xs text-ink-secondary">
       {children}
     </pre>
   );
@@ -33,7 +33,7 @@ function CodeBlock({ children }: { children: React.ReactNode }) {
 
 function SimNote({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mt-2 text-xs text-slate-500 italic">{children}</p>
+    <p className="mt-2 text-xs italic text-ink-tertiary">{children}</p>
   );
 }
 
@@ -56,19 +56,19 @@ function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl max-h-[80vh] overflow-y-auto bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-2xl"
+        className="max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-line bg-surface p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between gap-4 mb-5">
-          <h3 className="text-lg font-semibold text-slate-100">{title}</h3>
+        <div className="mb-5 flex items-start justify-between gap-4">
+          <h3 className="text-lg font-semibold text-ink">{title}</h3>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="shrink-0 h-8 w-8 grid place-items-center rounded-lg border border-slate-800 text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-line text-ink-tertiary transition-colors hover:bg-canvas hover:text-ink"
           >
             ✕
           </button>
@@ -87,31 +87,31 @@ function ReengagementBody({ analysis, targets }: { analysis: Analysis; targets: 
   return (
     <div className="space-y-5">
       {items.length === 0 && (
-        <p className="text-sm text-slate-400">No matching at-risk accounts found.</p>
+        <p className="text-sm text-ink-tertiary">No matching at-risk accounts found.</p>
       )}
       {items.map((item) => {
         const draft = buildEmailDraft(item);
         return (
           <div
             key={item.occId}
-            className="border border-slate-800 rounded-lg overflow-hidden bg-slate-950/40"
+            className="overflow-hidden rounded-lg border border-line bg-canvas"
           >
-            <div className="px-4 py-2.5 border-b border-slate-800 bg-slate-900/60">
-              <div className="text-sm font-medium text-slate-200">{item.companyName}</div>
-              <div className="text-xs text-slate-400">
+            <div className="border-b border-line bg-surface px-4 py-2.5">
+              <div className="text-sm font-medium text-ink">{item.companyName}</div>
+              <div className="text-xs text-ink-tertiary">
                 {item.officeName} · {item.buildingName} {item.floor}
               </div>
             </div>
-            <div className="px-4 py-3 space-y-1 font-mono text-xs">
+            <div className="space-y-1 px-4 py-3 font-mono text-xs">
               <div className="flex gap-2">
-                <span className="text-slate-500 w-16 shrink-0">To:</span>
-                <span className="text-slate-300">{draft.to}</span>
+                <span className="w-16 shrink-0 text-ink-tertiary">To:</span>
+                <span className="text-ink-secondary">{draft.to}</span>
               </div>
               <div className="flex gap-2">
-                <span className="text-slate-500 w-16 shrink-0">Subject:</span>
-                <span className="text-slate-300">{draft.subject}</span>
+                <span className="w-16 shrink-0 text-ink-tertiary">Subject:</span>
+                <span className="text-ink-secondary">{draft.subject}</span>
               </div>
-              <div className="pt-2 mt-2 border-t border-slate-800/70 text-slate-300 whitespace-pre-wrap leading-relaxed">
+              <div className="mt-2 whitespace-pre-wrap border-t border-line pt-2 leading-relaxed text-ink-secondary">
                 {draft.body}
               </div>
             </div>
@@ -121,7 +121,7 @@ function ReengagementBody({ analysis, targets }: { analysis: Analysis; targets: 
       <div>
         <button
           type="button"
-          className="bg-indigo-500 hover:bg-indigo-400 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+          className="rounded-md bg-pumpkin px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-pumpkin-hover"
         >
           Send via Resend
         </button>
@@ -139,16 +139,16 @@ function ResaleBody({ analysis, targets }: { analysis: Analysis; targets: string
   return (
     <div className="space-y-5">
       {items.length === 0 && (
-        <p className="text-sm text-slate-400">No matching vacant rooms found.</p>
+        <p className="text-sm text-ink-tertiary">No matching vacant rooms found.</p>
       )}
       {items.map((v) => {
         const listing = buildResaleListing(v);
         return (
           <div key={v.roomId} className="space-y-2">
-            <div className="text-sm font-medium text-slate-200">{listing.headline}</div>
-            <div className="text-xs text-slate-400">
+            <div className="text-sm font-medium text-ink">{listing.headline}</div>
+            <div className="text-xs text-ink-tertiary">
               Marketplace:{" "}
-              <span className="text-indigo-300">{listing.marketplace}</span>
+              <span className="font-medium text-pumpkin">{listing.marketplace}</span>
             </div>
             <CodeBlock>{JSON.stringify(listing.payload, null, 2)}</CodeBlock>
           </div>
@@ -167,15 +167,15 @@ function BrokerBody({ analysis, targets }: { analysis: Analysis; targets: string
   return (
     <div className="space-y-5">
       {items.length === 0 && (
-        <p className="text-sm text-slate-400">No matching at-risk accounts found.</p>
+        <p className="text-sm text-ink-tertiary">No matching at-risk accounts found.</p>
       )}
       {items.map((item) => {
         const payload = buildPipelineWebhook(item);
         return (
           <div key={item.occId} className="space-y-2">
-            <div className="text-sm font-medium text-slate-200">
+            <div className="text-sm font-medium text-ink">
               {item.companyName}{" "}
-              <span className="text-slate-500 font-normal">· {item.roomId}</span>
+              <span className="font-normal text-ink-tertiary">· {item.roomId}</span>
             </div>
             <CodeBlock>{JSON.stringify(payload, null, 2)}</CodeBlock>
           </div>
@@ -196,12 +196,12 @@ export default function ActionCenter({ analysis }: { analysis: Analysis }) {
   const openAction = actions.find((a) => a.key === open) ?? null;
 
   return (
-    <section className="space-y-5">
+    <section className="space-y-5" id="actions">
       <div>
-        <h2 className="text-xl font-semibold text-slate-100">
+        <h2 className="font-barlow text-xl font-bold tracking-wide text-ink">
           Top 3 Revenue Recovery Actions
         </h2>
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-ink-tertiary">
           Prioritized plays the system can execute this week.
         </p>
       </div>
@@ -210,9 +210,9 @@ export default function ActionCenter({ analysis }: { analysis: Analysis }) {
         {actions.map((action) => (
           <div
             key={action.key}
-            className="flex flex-col bg-slate-900/60 border border-slate-800 rounded-xl p-5"
+            className="flex flex-col rounded-xl border border-line bg-surface p-5"
           >
-            <div className="flex items-center justify-between mb-3">
+            <div className="mb-3 flex items-center justify-between">
               <span
                 className={`inline-flex h-7 w-7 items-center justify-center rounded-full border text-sm font-semibold ${
                   RANK_CHIP[action.rank] ?? RANK_CHIP[3]
@@ -220,25 +220,25 @@ export default function ActionCenter({ analysis }: { analysis: Analysis }) {
               >
                 {action.rank}
               </span>
-              <span className="text-[11px] uppercase tracking-wider text-slate-500">
+              <span className="text-[11px] uppercase tracking-wider text-ink-tertiary">
                 {action.targets.length} target
                 {action.targets.length === 1 ? "" : "s"}
               </span>
             </div>
 
-            <h3 className="text-base font-semibold text-slate-100 leading-snug">
+            <h3 className="text-base font-semibold leading-snug text-ink">
               {action.title}
             </h3>
-            <p className="mt-1 text-xs text-indigo-300/90">{action.systemAction}</p>
-            <p className="mt-2 text-sm text-slate-400 leading-relaxed flex-1">
+            <p className="mt-1 text-xs font-medium text-pumpkin">{action.systemAction}</p>
+            <p className="mt-2 flex-1 text-sm leading-relaxed text-ink-tertiary">
               {action.detail}
             </p>
 
-            <div className="mt-4 pt-4 border-t border-slate-800">
-              <div className="text-[11px] uppercase tracking-wider text-slate-500">
+            <div className="mt-4 border-t border-line pt-4">
+              <div className="text-[11px] uppercase tracking-wider text-ink-tertiary">
                 Estimated recovery
               </div>
-              <div className="text-2xl font-bold text-emerald-400 tracking-tight">
+              <div className="text-2xl font-bold tracking-tight text-positive">
                 {php(action.estimatedRecovery)}
               </div>
             </div>
@@ -246,7 +246,7 @@ export default function ActionCenter({ analysis }: { analysis: Analysis }) {
             <button
               type="button"
               onClick={() => setOpen(action.key)}
-              className="mt-4 w-full bg-indigo-500 hover:bg-indigo-400 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+              className="mt-4 w-full rounded-md bg-pumpkin px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-pumpkin-hover"
             >
               {BUTTON_LABEL[action.key]}
             </button>

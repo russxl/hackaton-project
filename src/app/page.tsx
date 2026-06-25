@@ -17,30 +17,17 @@ export default function Home() {
   );
 
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* Header */}
-      <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/15 text-lg ring-1 ring-emerald-500/30">
-              🪑
-            </span>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-100">
-              DeskYield
-            </h1>
-            <span className="rounded-full bg-indigo-500/15 px-2 py-0.5 text-xs font-medium text-indigo-300 ring-1 ring-indigo-500/30">
-              Empty Desk Revenue Recovery
-            </span>
-          </div>
-          <p className="mt-2 max-w-2xl text-sm text-slate-400">
-            Predicts which reserved seats will go unused in the next 7 days and
-            surfaces the top 3 revenue recovery actions — with PHP estimates.
-          </p>
-        </div>
-        <div className="text-right text-xs text-slate-500">
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      {/* Intro */}
+      <header className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <p className="max-w-2xl text-sm text-ink-secondary">
+          Predicts which reserved seats will go unused in the next 7 days and
+          surfaces the top 3 revenue recovery actions — with PHP estimates.
+        </p>
+        <div className="shrink-0 text-right text-xs text-ink-tertiary">
           <div>
             Analysis date{" "}
-            <span className="font-medium text-slate-300">
+            <span className="font-semibold text-ink-secondary">
               {shortDate(analysis.today)}
             </span>
           </div>
@@ -65,12 +52,12 @@ export default function Home() {
         <RiskTable items={analysis.riskItems} />
       </div>
 
-      <footer className="mt-12 border-t border-slate-800 pt-6 text-xs text-slate-500">
+      <footer className="mt-12 border-t border-line pt-6 text-xs text-ink-tertiary">
         Deterministic multi-signal model · Days to Expiry 40% · Seat Gap 30% ·
         Lease Term 20% · Account Status 10%. Figures derived from the provided
         ERP dataset ({analysis.riskItems.length} active agreements,{" "}
         {analysis.vacantItems.length} cold vacancies).
       </footer>
-    </main>
+    </div>
   );
 }

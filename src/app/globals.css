@@ -1,14 +1,68 @@
 @import "tailwindcss";
 
+/*
+ * DeskYield — themed to match the KMC ERP Core App design system.
+ * Tokens mirror KMC's palette: pumpkin brand, ink content colors,
+ * semantic informative/positive/warning/danger, light surfaces.
+ */
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Fonts — KMC uses Karla (body) + Barlow Condensed (display) */
+  --font-sans: var(--font-karla), system-ui, Arial, sans-serif;
+  --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  --font-karla: var(--font-karla), system-ui, Arial, sans-serif;
+  --font-barlow: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+
+  /* Brand — Pumpkin (KMC primary) */
+  --color-pumpkin: #ff7200;
+  --color-pumpkin-hover: #f2730d;
+  --color-pumpkin-active: #ff6a00;
+  --color-pumpkin-subtle: #fff1e6;
+  --color-pumpkin-subtle-hover: #ffe9d6;
+
+  /* Content / ink text */
+  --color-ink: #272e35;
+  --color-ink-secondary: #555f6d;
+  --color-ink-tertiary: #7e8b99;
+  --color-ink-disabled: #9ea8b3;
+  --color-ink-navy: #001738;
+
+  /* Semantic */
+  --color-informative: #3062d4;
+  --color-informative-subtle: #edf2ff;
+  --color-positive: #1d7c4d;
+  --color-positive-subtle: #e6f9ef;
+  --color-warning: #f59638;
+  --color-warning-subtle: #fff5eb;
+  --color-danger: #c53434;
+  --color-danger-subtle: #ffebeb;
+
+  /* Surfaces */
+  --color-surface: #ffffff;
+  --color-canvas: #f9fafb;
+  --color-surface-neutral: #f9fafb;
+
+  /* Lines / borders */
+  --color-line: #e9ecef;
+  --color-line-strong: #cfd6dd;
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-karla), Arial, Helvetica, sans-serif;
+}
+
+/* KMC-style slim scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #e9ecef;
+}
+::-webkit-scrollbar-thumb {
+  background: #9ea8b3;
+  border-radius: 30px;
 }
