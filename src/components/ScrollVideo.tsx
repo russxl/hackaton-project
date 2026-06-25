@@ -47,8 +47,8 @@ function Slide({
       className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center"
     >
       {def.kicker && (
-        <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-slate-950/40 px-3 py-1 font-mono text-xs uppercase tracking-[0.25em] text-emerald-300 backdrop-blur-sm">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+        <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-pumpkin/40 bg-slate-950/40 px-3 py-1 font-mono text-xs uppercase tracking-[0.25em] text-pumpkin backdrop-blur-sm">
+          <span className="h-1.5 w-1.5 rounded-full bg-pumpkin" />
           {def.kicker}
         </div>
       )}
@@ -154,7 +154,7 @@ export default function ScrollVideo({ grandTotal }: { grandTotal: number }) {
         <>
           Real floors. Real desks.
           <br />
-          <span className="text-gradient-emerald">Real money.</span>
+          <span className="text-gradient-pumpkin">Real money.</span>
         </>
       ),
       body: "Thousands of reserved seats across every KMC hub.",
@@ -188,7 +188,7 @@ export default function ScrollVideo({ grandTotal }: { grandTotal: number }) {
       title: (
         <>
           We see the empty ones —{" "}
-          <span className="text-gradient-emerald">7 days early.</span>
+          <span className="text-gradient-pumpkin">7 days early.</span>
         </>
       ),
       body: `${php0(grandTotal)} recoverable this week alone.`,
@@ -212,7 +212,7 @@ export default function ScrollVideo({ grandTotal }: { grandTotal: number }) {
           className="absolute inset-0 opacity-30 mix-blend-overlay"
           style={{
             backgroundImage:
-              "linear-gradient(rgba(52,211,153,0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(52,211,153,0.18) 1px, transparent 1px)",
+              "linear-gradient(rgba(255,114,0,0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(255,114,0,0.18) 1px, transparent 1px)",
             backgroundSize: "60px 60px, 60px 60px",
           }}
         />
@@ -227,7 +227,7 @@ export default function ScrollVideo({ grandTotal }: { grandTotal: number }) {
         <div className="absolute bottom-10 left-1/2 flex -translate-x-1/2 items-center gap-3">
           <div className="h-px w-32 overflow-hidden bg-white/15">
             <motion.div
-              className="h-full origin-left bg-emerald-400"
+              className="h-full origin-left bg-pumpkin"
               style={{ scaleX: railScaleX }}
             />
           </div>
