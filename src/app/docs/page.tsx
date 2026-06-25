@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import Link from "next/link";
 
 /* ------------------------------------------------------------------ *
  * DeskYield API — Reference & Live Console
@@ -790,18 +791,19 @@ const NAV = [
     kind: "rest" as const,
     method: e.method,
   })),
+  { id: "chat", label: "Chat Agent", kind: "chat" as const },
   { id: "mcp", label: "MCP Console", kind: "mcp" as const },
 ];
 
 export default function ApiDocs() {
   const [base, setBase] = useState("");
-  const [origin, setOrigin] = useState("");
+  const origin = useSyncExternalStore(
+    () => () => {},
+    () => window.location.origin,
+    () => "",
+  );
   const [active, setActive] = useState("overview");
   const main = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setOrigin(window.location.origin);
-  }, []);
 
   useEffect(() => {
     const ids = NAV.map((n) => n.id);
@@ -854,7 +856,7 @@ export default function ApiDocs() {
       <div className="mx-auto flex max-w-7xl gap-10 px-5 sm:px-8">
         {/* sidebar */}
         <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col gap-6 overflow-y-auto py-8 lg:flex">
-          <a href="/" className="group flex items-center gap-2">
+          <Link href="/" className="group flex items-center gap-2">
             <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/15 text-lg ring-1 ring-emerald-500/30">
               🪑
             </span>
@@ -866,7 +868,7 @@ export default function ApiDocs() {
                 API · v1
               </span>
             </span>
-          </a>
+          </Link>
 
           <nav className="flex flex-col gap-0.5">
             {NAV.map((n) => {
@@ -890,7 +892,11 @@ export default function ApiDocs() {
                   ) : (
                     <span
                       className={`inline-block h-1.5 w-1.5 rounded-full ${
-                        n.kind === "mcp" ? "bg-indigo-400" : "bg-slate-600"
+                        n.kind === "mcp"
+                          ? "bg-indigo-400"
+                          : n.kind === "chat"
+                            ? "bg-sky-400"
+                            : "bg-slate-600"
                       }`}
                     />
                   )}
@@ -998,10 +1004,64 @@ export default function ApiDocs() {
               </Section>
             ))}
 
+            {/* Chat agent */}
+            <Section
+              id="chat"
+              index={String(REST.length + 1).padStart(2, "0")}
+              kicker="sse · /api/chat · auth required"
+              title="Chat Agent"
+            >
+              <p className="mb-2 max-w-2xl text-[14px] leading-relaxed text-slate-400">
+                A conversational agent that streams answers (SSE) and grounds every
+                PHP figure via read-only tool calls over the same engine. Two-token
+                auth: an API key (<span className={`${mono} text-slate-300`}>dsky_…</span>)
+                for server-to-server, or a short-lived visitor token
+                (<span className={`${mono} text-slate-300`}>dyv.…</span>) for browser
+                widgets — minted via{" "}
+                <span className={`${mono} text-slate-300`}>POST /api/chat/token</span>.
+              </p>
+              <p className={`${mono} mb-5 text-[11px] text-slate-600`}>
+                → event-stream&nbsp;
+                <span className="text-slate-400">
+                  {`{ type: "delta" | "tool_call" | "tool_result" | "done" | "error" }`}
+                </span>
+              </p>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  ["Auth", "Bearer dsky_… / dyv.…", "API key = server-to-server. Visitor token = browser, origin-checked."],
+                  ["Tools", "6 read-only", "get_recovery_actions · get_risk_items · get_vacancies · get_totals · build_email_draft · build_resale_listing"],
+                  ["Scope", "read-only", "The model can never send email or publish listings — only draft artifacts."],
+                  ["Widget", "/widget", "Live paste-in widget demo. Embed script: /deskyield-chat.js"],
+                ].map(([k, v, note]) => (
+                  <div
+                    key={k}
+                    className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4"
+                  >
+                    <div className={`${mono} text-[10px] uppercase tracking-widest text-slate-500`}>
+                      {k}
+                    </div>
+                    <div className={`${mono} mt-1 text-[13px] text-slate-200`}>{v}</div>
+                    <div className="mt-1 text-[12px] leading-snug text-slate-500">{note}</div>
+                  </div>
+                ))}
+              </div>
+
+              <p className="mt-5 max-w-2xl text-[13px] leading-relaxed text-slate-400">
+                Try the live embeddable widget at{" "}
+                <a href="/widget" className="text-sky-300 underline decoration-sky-500/40 underline-offset-2 hover:text-sky-200">
+                  /widget
+                </a>{" "}
+                (configure{" "}
+                <span className={`${mono} text-slate-300`}>OPENAI_API_KEY</span> + a
+                demo key first).
+              </p>
+            </Section>
+
             {/* MCP */}
             <Section
               id="mcp"
-              index={String(REST.length + 1).padStart(2, "0")}
+              index={String(REST.length + 2).padStart(2, "0")}
               kicker="streamable-http · /api/mcp"
               title="MCP Console"
             >

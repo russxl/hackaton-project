@@ -82,13 +82,21 @@ Deployable to Vercel as-is.
 src/data/dataset.json     ERP workbook → JSON (25 rooms, 40 agreements, 10 clients)
 src/lib/engine.ts         Risk scoring + revenue + action grouping
 src/lib/actions.ts        Simulated email / webhook / listing generators
-src/lib/service.ts        Service facade shared by REST + MCP (single source of truth)
+src/lib/service.ts        Service facade shared by REST + MCP + chat (single source of truth)
 src/lib/validate.ts       Dataset gatekeeping (zod) for POST / MCP input
 src/lib/http.ts           CORS + JSON response helpers
+src/lib/auth/*            API keys, visitor tokens, origin checks, auth config
+src/lib/chat/*            OpenAI tool definitions, function-calling runner, SSE encoder
+src/lib/ratelimit.ts      Per-principal rate limiting
+src/proxy.ts              Next 16 proxy (CORS + optimistic auth gate for /api/chat*)
 src/lib/format.ts         PHP currency + date helpers
 src/components/*           Dashboard UI
 src/app/page.tsx           Composition (server component runs the engine)
-src/app/api/*              REST endpoints + MCP server
+src/app/widget/page.tsx    Live embeddable-widget demo
+src/app/docs/*             API reference + live REST/MCP/chat console
+src/app/api/*              REST endpoints + MCP server + chat agent
+public/deskyield-chat.js   Embeddable, framework-free chat widget
+scripts/issue-key.mjs      Generate an API key + its env record
 ```
 
 ## API & MCP
@@ -137,3 +145,62 @@ curl -X POST http://localhost:3000/api/mcp \
   -H 'accept: application/json, text/event-stream' \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
 ```
+
+## Chatbot & embeddable widget
+
+A conversational agent (`POST /api/chat`, SSE) that grounds every PHP figure via
+read-only tool calls over the same `analyse()` engine — plus a paste-in,
+framework-free widget any application can embed.
+
+**Security model (two tokens):**
+- **API key** (`dsky_<id>_<secret>`) — server-to-server only, never shipped to a browser.
+- **Visitor token** (`dyv.…`) — short-lived, HMAC-signed, origin-restricted; minted by
+  the embedding app's backend via `POST /api/chat/token`. The browser widget holds only this.
+
+### Configure
+
+```bash
+# 1. Generate an API key + its env record:
+node scripts/issue-key.mjs https://your-widget-origin.com
+#   -> prints the key (store once) and the DESKYIELD_API_KEYS JSON line.
+
+# 2. Fill .env.local (see .env.example):
+OPENAI_API_KEY=sk-...
+DESKYIELD_TOKEN_SECRET=$(openssl rand -hex 32)
+DESKYIELD_API_KEYS=[{"id":"...","hash":"...","origins":["https://your-widget-origin.com"]}]
+DESKYIELD_DEMO_API_KEY=dsky_...   # optional: enables the /widget demo
+```
+
+### Use
+
+```bash
+# Mint a visitor token (server-side, with your API key):
+curl -X POST http://localhost:3000/api/chat/token \
+  -H 'authorization: Bearer dsky_...'      # -> { "token": "dyv....", "expiresIn": 3600 }
+
+# Chat (SSE stream, with either credential):
+curl -N -X POST http://localhost:3000/api/chat \
+  -H 'authorization: Bearer dyv....' \
+  -H 'content-type: application/json' \
+  -d '{"messages":[{"role":"user","content":"Which seats are most at risk this week?"}]}'
+```
+
+### Embed the widget
+
+```html
+<!-- 1. Your backend mints a visitor token via POST /api/chat/token with your API key -->
+<!-- 2. Your frontend mounts the widget with that token: -->
+<script src="https://your-host/deskyield-chat.js"></script>
+<script>
+  DeskYieldChat.mount({ host: "https://your-host", token: "<visitor token>" });
+</script>
+```
+
+See it live at `/widget`. Tools exposed to the model (all read-only):
+`get_recovery_actions`, `get_risk_items`, `get_vacancies`, `get_totals`,
+`build_email_draft`, `build_resale_listing`.
+
+> Auth hardening notes: `proxy.ts` (Next 16's renamed middleware) scopes CORS to
+> `/api/chat*` and fast-fails missing credentials; full verification runs in each
+> route handler. Rate limiting is in-memory per principal (swap for Upstash KV in
+> multi-instance prod). `/api/mcp` and the REST endpoints remain open for the demo.
