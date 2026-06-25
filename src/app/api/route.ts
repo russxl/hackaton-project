@@ -45,7 +45,7 @@ export function GET() {
       ],
       scope: "read-only",
       widget: "/deskyield-chat.js",
-      widget_demo: "/widget",
+      widget_demo: "/docs#widget",
     },
     mcp: {
       transport: "streamable-http",

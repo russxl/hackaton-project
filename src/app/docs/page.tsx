@@ -400,7 +400,7 @@ function Copy({ text }: { text: string }) {
 }
 
 /* --- REST try panel ------------------------------------------------- */
-function TryPanel({ ep, base }: { ep: Endpoint; base: string }) {
+function TryPanel({ ep, base, origin: parentOrigin }: { ep: Endpoint; base: string; origin: string }) {
   const [q, setQ] = useState<Record<string, string>>(() => {
     const init: Record<string, string> = {};
     for (const p of ep.query) {
@@ -427,7 +427,7 @@ function TryPanel({ ep, base }: { ep: Endpoint; base: string }) {
   }, [q, ep.query]);
 
   const fullPath = `${ep.path}${queryString}`;
-  const origin = base || (typeof window !== "undefined" ? window.location.origin : "");
+  const origin = base || parentOrigin;
 
   const curl = useMemo(() => {
     const u = `${origin}${fullPath}`;
@@ -792,8 +792,233 @@ const NAV = [
     method: e.method,
   })),
   { id: "chat", label: "Chat Agent", kind: "chat" as const },
+  { id: "widget", label: "Widget Embed", kind: "widget" as const },
   { id: "mcp", label: "MCP Console", kind: "mcp" as const },
 ];
+
+/* --- Widget embed guide -------------------------------------------- */
+function WidgetCode({ children }: { children: string }) {
+  return (
+    <pre
+      className={`${mono} overflow-x-auto rounded-lg border border-white/10 bg-slate-950/70 p-3.5 text-[11.5px] leading-relaxed text-slate-300`}
+    >
+      {children}
+    </pre>
+  );
+}
+
+function WidgetPanel({
+  tag,
+  title,
+  children,
+}: {
+  tag: string;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
+      <div className="mb-3 flex items-center gap-2">
+        <span className={`${mono} rounded-md bg-white/[0.06] px-2 py-0.5 text-[10px] uppercase tracking-wider text-slate-300`}>
+          {tag}
+        </span>
+        <h3 className="text-[13px] font-semibold text-slate-100">{title}</h3>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function WidgetEmbed({ origin }: { origin: string }) {
+  const host = origin || "<origin>";
+  const [live, setLive] = useState(false);
+  const mounted = useRef(false);
+
+  useEffect(() => {
+    if (mounted.current) return;
+    mounted.current = true;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/widget-token");
+        const data = (await res.json()) as {
+          enabled?: boolean;
+          origin?: string;
+          token?: string;
+        };
+        if (cancelled || !data.enabled || !data.token || !data.origin) return;
+        setLive(true);
+        const s = document.createElement("script");
+        s.async = true;
+        s.src = `${data.origin}/deskyield-chat.js`;
+        s.onload = () => {
+          const w = window as unknown as {
+            DeskYieldChat?: { mount: (o: Record<string, string>) => void };
+          };
+          w.DeskYieldChat?.mount({
+            host: data.origin!,
+            token: data.token!,
+            title: "DeskYield",
+            subtitle: "Empty-desk revenue analyst",
+          });
+        };
+        document.body.appendChild(s);
+      } catch {
+        /* demo not configured — guide stays static */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* live status */}
+      {live ? (
+        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 text-[13px] text-slate-300">
+          <span className="mr-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-300 ring-1 ring-emerald-500/30">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+            Live
+          </span>
+          The widget is live on this page — click the launcher (bottom-right).
+          Ask which seats are at risk this week, or to draft a re-engagement email.
+        </div>
+      ) : (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-[13px] text-slate-300">
+          Live demo off. Set{" "}
+          <code className={`${mono} text-slate-200`}>DESKYIELD_DEMO_API_KEY</code>{" "}
+          (see Service setup below) to mount it here.
+        </div>
+      )}
+
+      {/* embed — integrating apps */}
+      <div>
+        <div className="mb-1 flex flex-wrap items-center gap-2">
+          <h3 className="text-[15px] font-semibold text-slate-100">
+            Embed the widget
+          </h3>
+          <span className={`${mono} rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] uppercase tracking-wider text-emerald-300 ring-1 ring-emerald-500/30`}>
+            integrating apps
+          </span>
+        </div>
+        <p className="mb-4 text-[13px] leading-relaxed text-slate-400">
+          Hand the app an API key (<code className={`${mono} text-slate-300`}>dsky_…</code>)
+          you issued, plus these two steps. No env vars, no OpenAI key on their side.
+        </p>
+        <div className="grid gap-3 md:grid-cols-2">
+          <WidgetPanel tag="1 · backend" title="Get a visitor token">
+            <p className="mb-3 text-[12px] text-slate-500">
+              Call once per session with the API key. Pass the returned token to
+              the frontend.
+            </p>
+            <WidgetCode>{`const res = await fetch("${host}/api/chat/token", {
+  method: "POST",
+  headers: { authorization: "Bearer dsky_…" },
+});
+const { token } = await res.json();
+// token -> "dyv.…"`}</WidgetCode>
+          </WidgetPanel>
+          <WidgetPanel tag="2 · frontend" title="Mount the widget">
+            <p className="mb-3 text-[12px] text-slate-500">
+              Load the script and mount with the token from step 1.
+            </p>
+            <WidgetCode>{`<script src="${host}/deskyield-chat.js"></script>
+<script>
+  DeskYieldChat.mount({
+    host: "${host}",
+    token,            // the dyv.… from step 1
+  });
+</script>`}</WidgetCode>
+          </WidgetPanel>
+        </div>
+        <p className="mt-3 text-[12px] text-slate-500">
+          A launcher button and chat panel appear, style-isolated via Shadow DOM.
+          Optional mount options:{" "}
+          <code className={`${mono} text-slate-400`}>title</code>,{" "}
+          <code className={`${mono} text-slate-400`}>subtitle</code>.
+        </p>
+      </div>
+
+      {/* service setup — operator */}
+      <div>
+        <div className="mb-1 flex flex-wrap items-center gap-2">
+          <h3 className="text-[15px] font-semibold text-slate-100">
+            Service setup
+          </h3>
+          <span className={`${mono} rounded-full bg-indigo-500/15 px-2 py-0.5 text-[10px] uppercase tracking-wider text-indigo-300 ring-1 ring-indigo-500/30`}>
+            operator
+          </span>
+        </div>
+        <p className="mb-4 text-[13px] leading-relaxed text-slate-400">
+          Done on <strong>your</strong> deployment. Integrating apps never see
+          these.
+        </p>
+        <div className="space-y-4">
+          <div>
+            <p className="mb-2 text-[12px] text-slate-500">
+              Generate a token secret and an initial API key:
+            </p>
+            <WidgetCode>{`openssl rand -hex 32                      # -> DESKYIELD_TOKEN_SECRET
+node scripts/issue-key.mjs ${host}   # -> prints key + DESKYIELD_API_KEYS line`}</WidgetCode>
+          </div>
+          <div>
+            <p className="mb-2 text-[12px] text-slate-500">
+              Add to <code className={`${mono} text-slate-300`}>.env.local</code>{" "}
+              (dev) or your host&apos;s env store:
+            </p>
+            <WidgetCode>{`OPENAI_API_KEY=sk-…
+DESKYIELD_TOKEN_SECRET=<from openssl, set once>
+DESKYIELD_API_KEYS=[{"id":"<id>","hash":"<hash>","origins":["${host}"]}]
+DESKYIELD_DEMO_API_KEY=dsky_…   # optional: enables the live demo above`}</WidgetCode>
+          </div>
+          <div>
+            <p className="mb-2 text-[12px] text-slate-500">
+              Issue a key for a new app — bound to <strong>their</strong> origin;
+              visitor tokens from anywhere else are rejected:
+            </p>
+            <WidgetCode>{`node scripts/issue-key.mjs https://their-app.com
+# -> dsky_… (hand THIS to the integrating app, with the embed snippet)
+# -> DESKYIELD_API_KEYS record (add it to YOUR env)`}</WidgetCode>
+          </div>
+        </div>
+      </div>
+
+      {/* reference */}
+      <div>
+        <h3 className="mb-3 text-[15px] font-semibold text-slate-100">Reference</h3>
+        <div className="overflow-x-auto rounded-lg border border-white/[0.07]">
+          <table className="w-full text-left text-[12px]">
+            <thead className={`${mono} bg-white/[0.03] text-slate-500`}>
+              <tr>
+                <th className="px-4 py-2 font-medium">Endpoint</th>
+                <th className="px-4 py-2 font-medium">Credential</th>
+                <th className="px-4 py-2 font-medium">Use</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/[0.06] text-slate-300">
+              <tr>
+                <td className={`${mono} px-4 py-2 text-slate-200`}>POST /api/chat/token</td>
+                <td className={`${mono} px-4 py-2 text-indigo-300`}>dsky_…</td>
+                <td className="px-4 py-2">Mint a visitor token</td>
+              </tr>
+              <tr>
+                <td className={`${mono} px-4 py-2 text-slate-200`}>POST /api/chat</td>
+                <td className={`${mono} px-4 py-2 text-emerald-300`}>dyv.…</td>
+                <td className="px-4 py-2">Stream a chat turn (SSE)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ul className="mt-4 space-y-1.5 text-[12px] text-slate-500">
+          <li>• Tokens are origin-bound and expire (default 1h); mint a fresh one when needed.</li>
+          <li>• Visitor tokens can&apos;t mint tokens — only API keys can.</li>
+          <li>• The agent is read-only: it queries the engine and drafts artifacts, never sends.</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
 
 export default function ApiDocs() {
   const [base, setBase] = useState("");
@@ -896,7 +1121,9 @@ export default function ApiDocs() {
                           ? "bg-indigo-400"
                           : n.kind === "chat"
                             ? "bg-sky-400"
-                            : "bg-slate-600"
+                            : n.kind === "widget"
+                              ? "bg-emerald-400"
+                              : "bg-slate-600"
                       }`}
                     />
                   )}
@@ -1000,7 +1227,7 @@ export default function ApiDocs() {
                   → returns&nbsp;
                   <span className="text-slate-400">{ep.returns}</span>
                 </p>
-                <TryPanel ep={ep} base={base} />
+                <TryPanel ep={ep} base={base} origin={origin} />
               </Section>
             ))}
 
@@ -1032,7 +1259,7 @@ export default function ApiDocs() {
                   ["Auth", "Bearer dsky_… / dyv.…", "API key = server-to-server. Visitor token = browser, origin-checked."],
                   ["Tools", "6 read-only", "get_recovery_actions · get_risk_items · get_vacancies · get_totals · build_email_draft · build_resale_listing"],
                   ["Scope", "read-only", "The model can never send email or publish listings — only draft artifacts."],
-                  ["Widget", "/widget", "Live paste-in widget demo. Embed script: /deskyield-chat.js"],
+                  ["Embed", "#widget", "Drop the chat agent into any app — see Widget Embed below."],
                 ].map(([k, v, note]) => (
                   <div
                     key={k}
@@ -1048,20 +1275,34 @@ export default function ApiDocs() {
               </div>
 
               <p className="mt-5 max-w-2xl text-[13px] leading-relaxed text-slate-400">
-                Try the live embeddable widget at{" "}
-                <a href="/widget" className="text-sky-300 underline decoration-sky-500/40 underline-offset-2 hover:text-sky-200">
-                  /widget
+                Want it in your own app? The{" "}
+                <a href="#widget" className="text-sky-300 underline decoration-sky-500/40 underline-offset-2 hover:text-sky-200">
+                  Widget Embed
                 </a>{" "}
-                (configure{" "}
-                <span className={`${mono} text-slate-300`}>OPENAI_API_KEY</span> + a
-                demo key first).
+                section below has the live demo and the 2-step embed.
               </p>
+            </Section>
+
+            {/* Widget embed */}
+            <Section
+              id="widget"
+              index={String(REST.length + 2).padStart(2, "0")}
+              kicker="embed · /deskyield-chat.js"
+              title="Widget Embed"
+            >
+              <p className="mb-6 max-w-2xl text-[14px] leading-relaxed text-slate-400">
+                Drop the chat agent into any app. Two roles: <strong>you</strong>{" "}
+                (operator) configure the service and issue API keys;{" "}
+                <strong>integrating apps</strong> embed the widget with a key you
+                give them. The launcher is style-isolated via Shadow DOM.
+              </p>
+              <WidgetEmbed origin={origin} />
             </Section>
 
             {/* MCP */}
             <Section
               id="mcp"
-              index={String(REST.length + 2).padStart(2, "0")}
+              index={String(REST.length + 3).padStart(2, "0")}
               kicker="streamable-http · /api/mcp"
               title="MCP Console"
             >

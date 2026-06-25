@@ -12,8 +12,9 @@
  *                           [{ "id", "hash", "origins": [] }]
  *  DESKYIELD_TOKEN_TTL      Visitor token lifetime in seconds (default 3600).
  *  DESKYIELD_CHAT_LIMIT     Max chat requests per principal per minute (default 20).
- *  DESKYIELD_DEMO_API_KEY   Optional full demo API key used by the /widget demo
- *                           page to mint itself a visitor token server-side.
+ *  DESKYIELD_DEMO_API_KEY   Optional full demo API key used by the /docs#widget
+ *                           live demo to mint itself a visitor token server-side
+ *                           (via GET /api/widget-token).
  */
 
 export type ApiKeyRecord = {
