@@ -755,6 +755,230 @@ function Section({
   );
 }
 
+/* --- Widget embed guide -------------------------------------------- */
+function WidgetCode({ children }: { children: string }) {
+  return (
+    <pre
+      className={`${mono} overflow-x-auto rounded-lg border border-line bg-canvas p-3.5 text-[11.5px] leading-relaxed text-ink-secondary`}
+    >
+      {children}
+    </pre>
+  );
+}
+
+function WidgetPanel({
+  tag,
+  title,
+  children,
+}: {
+  tag: string;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col rounded-xl border border-line bg-surface p-4">
+      <div className="mb-3 flex items-center gap-2">
+        <span className={`${mono} rounded-md bg-pumpkin-subtle px-2 py-0.5 text-[10px] uppercase tracking-wider text-pumpkin`}>
+          {tag}
+        </span>
+        <h3 className="text-[13px] font-semibold text-ink">{title}</h3>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function WidgetEmbed({ origin }: { origin: string }) {
+  const host = origin || "<origin>";
+  const [live, setLive] = useState(false);
+  const mounted = useRef(false);
+
+  useEffect(() => {
+    if (mounted.current) return;
+    mounted.current = true;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/widget-token");
+        const data = (await res.json()) as {
+          enabled?: boolean;
+          origin?: string;
+          token?: string;
+        };
+        if (cancelled || !data.enabled || !data.token || !data.origin) return;
+        setLive(true);
+        const s = document.createElement("script");
+        s.async = true;
+        s.src = `${data.origin}/deskyield-chat.js`;
+        s.onload = () => {
+          const w = window as unknown as {
+            DeskYieldChat?: { mount: (o: Record<string, string>) => void };
+          };
+          w.DeskYieldChat?.mount({
+            host: data.origin!,
+            token: data.token!,
+            title: "DeskYield",
+            subtitle: "Empty-desk revenue analyst",
+          });
+        };
+        document.body.appendChild(s);
+      } catch {
+        /* demo not configured — guide stays static */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* live status */}
+      {live ? (
+        <div className="rounded-xl border border-positive/30 bg-positive-subtle p-4 text-[13px] text-ink-secondary">
+          <span className="mr-2 inline-flex items-center gap-1.5 rounded-full bg-positive/15 px-2 py-0.5 text-[11px] font-medium text-positive ring-1 ring-positive/30">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-positive" />
+            Live
+          </span>
+          The widget is live on this page — click the launcher (bottom-right).
+          Ask which seats are at risk this week, or to draft a re-engagement email.
+        </div>
+      ) : (
+        <div className="rounded-xl border border-warning/30 bg-warning-subtle p-4 text-[13px] text-ink-secondary">
+          Live demo off. Set{" "}
+          <code className={`${mono} text-ink`}>DESKYIELD_DEMO_API_KEY</code>{" "}
+          (see Service setup below) to mount it here.
+        </div>
+      )}
+
+      {/* embed — integrating apps */}
+      <div>
+        <div className="mb-1 flex flex-wrap items-center gap-2">
+          <h3 className="text-[15px] font-semibold text-ink">
+            Embed the widget
+          </h3>
+          <span className={`${mono} rounded-full bg-positive-subtle px-2 py-0.5 text-[10px] uppercase tracking-wider text-positive ring-1 ring-positive/30`}>
+            integrating apps
+          </span>
+        </div>
+        <p className="mb-4 text-[13px] leading-relaxed text-ink-secondary">
+          Hand the app an API key (<code className={`${mono} text-ink`}>dsky_…</code>)
+          you issued, plus these two steps. No env vars, no OpenAI key on their side.
+        </p>
+        <div className="grid gap-3 md:grid-cols-2">
+          <WidgetPanel tag="1 · backend" title="Get a visitor token">
+            <p className="mb-3 text-[12px] text-ink-tertiary">
+              Call once per session with the API key. Pass the returned token to
+              the frontend.
+            </p>
+            <WidgetCode>{`const res = await fetch("${host}/api/chat/token", {
+  method: "POST",
+  headers: { authorization: "Bearer dsky_…" },
+});
+const { token } = await res.json();
+// token -> "dyv.…"`}</WidgetCode>
+          </WidgetPanel>
+          <WidgetPanel tag="2 · frontend" title="Mount the widget">
+            <p className="mb-3 text-[12px] text-ink-tertiary">
+              Load the script and mount with the token from step 1.
+            </p>
+            <WidgetCode>{`<script src="${host}/deskyield-chat.js"></script>
+<script>
+  DeskYieldChat.mount({
+    host: "${host}",
+    token,            // the dyv.… from step 1
+  });
+</script>`}</WidgetCode>
+          </WidgetPanel>
+        </div>
+        <p className="mt-3 text-[12px] text-ink-tertiary">
+          A launcher button and chat panel appear, style-isolated via Shadow DOM.
+          Optional mount options:{" "}
+          <code className={`${mono} text-ink-secondary`}>title</code>,{" "}
+          <code className={`${mono} text-ink-secondary`}>subtitle</code>.
+        </p>
+      </div>
+
+      {/* service setup — operator */}
+      <div>
+        <div className="mb-1 flex flex-wrap items-center gap-2">
+          <h3 className="text-[15px] font-semibold text-ink">
+            Service setup
+          </h3>
+          <span className={`${mono} rounded-full bg-informative-subtle px-2 py-0.5 text-[10px] uppercase tracking-wider text-informative ring-1 ring-informative/30`}>
+            operator
+          </span>
+        </div>
+        <p className="mb-4 text-[13px] leading-relaxed text-ink-secondary">
+          Done on <strong>your</strong> deployment. Integrating apps never see
+          these.
+        </p>
+        <div className="space-y-4">
+          <div>
+            <p className="mb-2 text-[12px] text-ink-tertiary">
+              Generate a token secret and an initial API key:
+            </p>
+            <WidgetCode>{`openssl rand -hex 32                      # -> DESKYIELD_TOKEN_SECRET
+node scripts/issue-key.mjs ${host}   # -> prints key + DESKYIELD_API_KEYS line`}</WidgetCode>
+          </div>
+          <div>
+            <p className="mb-2 text-[12px] text-ink-tertiary">
+              Add to <code className={`${mono} text-ink`}>.env.local</code>{" "}
+              (dev) or your host&apos;s env store:
+            </p>
+            <WidgetCode>{`OPENAI_API_KEY=sk-…
+DESKYIELD_TOKEN_SECRET=<from openssl, set once>
+DESKYIELD_API_KEYS=[{"id":"<id>","hash":"<hash>","origins":["${host}"]}]
+DESKYIELD_DEMO_API_KEY=dsky_…   # optional: enables the live demo above`}</WidgetCode>
+          </div>
+          <div>
+            <p className="mb-2 text-[12px] text-ink-tertiary">
+              Issue a key for a new app — bound to <strong>their</strong> origin;
+              visitor tokens from anywhere else are rejected:
+            </p>
+            <WidgetCode>{`node scripts/issue-key.mjs https://their-app.com
+# -> dsky_… (hand THIS to the integrating app, with the embed snippet)
+# -> DESKYIELD_API_KEYS record (add it to YOUR env)`}</WidgetCode>
+          </div>
+        </div>
+      </div>
+
+      {/* reference */}
+      <div>
+        <h3 className="mb-3 text-[15px] font-semibold text-ink">Reference</h3>
+        <div className="overflow-x-auto rounded-lg border border-line">
+          <table className="w-full text-left text-[12px]">
+            <thead className={`${mono} bg-canvas text-ink-tertiary`}>
+              <tr>
+                <th className="px-4 py-2 font-medium">Endpoint</th>
+                <th className="px-4 py-2 font-medium">Credential</th>
+                <th className="px-4 py-2 font-medium">Use</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-line text-ink-secondary">
+              <tr>
+                <td className={`${mono} px-4 py-2 text-ink`}>POST /api/chat/token</td>
+                <td className={`${mono} px-4 py-2 text-informative`}>dsky_…</td>
+                <td className="px-4 py-2">Mint a visitor token</td>
+              </tr>
+              <tr>
+                <td className={`${mono} px-4 py-2 text-ink`}>POST /api/chat</td>
+                <td className={`${mono} px-4 py-2 text-positive`}>dyv.…</td>
+                <td className="px-4 py-2">Stream a chat turn (SSE)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ul className="mt-4 space-y-1.5 text-[12px] text-ink-tertiary">
+          <li>• Tokens are origin-bound and expire (default 1h); mint a fresh one when needed.</li>
+          <li>• Visitor tokens can&apos;t mint tokens — only API keys can.</li>
+          <li>• The agent is read-only: it queries the engine and drafts artifacts, never sends.</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
 const NAV = [
   { id: "overview", label: "Overview", kind: "ref" as const },
   ...REST.map((e) => ({
@@ -764,6 +988,7 @@ const NAV = [
     method: e.method,
   })),
   { id: "mcp", label: "MCP Console", kind: "mcp" as const },
+  { id: "widget", label: "Widget Embed", kind: "widget" as const },
 ];
 
 export default function ApiDocs() {
@@ -864,7 +1089,11 @@ export default function ApiDocs() {
                   ) : (
                     <span
                       className={`inline-block h-1.5 w-1.5 rounded-full ${
-                        n.kind === "mcp" ? "bg-informative" : "bg-ink-tertiary"
+                        n.kind === "mcp"
+                          ? "bg-informative"
+                          : n.kind === "widget"
+                            ? "bg-pumpkin"
+                            : "bg-ink-tertiary"
                       }`}
                     />
                   )}
@@ -993,6 +1222,22 @@ export default function ApiDocs() {
                 <span className="text-ink-secondary">tools/call</span>
               </p>
               <McpRunner base={base} />
+            </Section>
+
+            {/* Widget embed */}
+            <Section
+              id="widget"
+              index={String(REST.length + 2).padStart(2, "0")}
+              kicker="embed · /deskyield-chat.js"
+              title="Widget Embed"
+            >
+              <p className="mb-6 max-w-2xl text-[14px] leading-relaxed text-ink-secondary">
+                Drop the chat agent into any app. Two roles: <strong>you</strong>{" "}
+                (operator) configure the service and issue API keys;{" "}
+                <strong>integrating apps</strong> embed the widget with a key you
+                give them. The launcher is style-isolated via Shadow DOM.
+              </p>
+              <WidgetEmbed origin={origin} />
             </Section>
           </div>
 
